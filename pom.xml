@@ -1,0 +1,91 @@
+<!-- This is the root <project> element for any Maven project -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <!-- Tells Maven which POM model version to use (always 4.0.0 for modern Maven) -->
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Identifies your project uniquely in the Maven world -->
+    <groupId>com.rainscape</groupId> <!-- Like a namespace: usually reversed domain -->
+    <artifactId>rainscape-backend</artifactId> <!-- The project name -->
+    <version>0.0.1-SNAPSHOT</version> <!-- Version: SNAPSHOT means "in development" -->
+    <packaging>jar</packaging> <!-- Output will be a runnable JAR file -->
+
+    <!-- The Spring Boot parent sets default versions for dependencies/plugins -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.2</version> <!-- Spring Boot version -->
+        <relativePath/> <!-- Means: find parent in the Maven repository, not locally -->
+    </parent>
+
+    <!-- Project properties -->
+    <properties>
+        <java.version>17</java.version> <!-- We will compile using Java 17 -->
+    </properties>
+
+    <!-- Libraries (dependencies) we need -->
+    <dependencies>
+
+        <!-- Spring Web: builds REST APIs, comes with Tomcat server -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Data JPA: ORM layer to work with databases -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- PostgreSQL database driver: allows Java to connect to PostgreSQL -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope> <!-- Only needed when running, not for compilation -->
+        </dependency>
+
+        <!-- Bean Validation API (e.g. @NotNull, @Size) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- Lombok: reduces boilerplate by generating getters/setters at compile time -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional> <!-- Not required at runtime, only for dev -->
+        </dependency>
+
+        <!-- Testing libraries (JUnit, Mockito, etc.) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope> <!-- Only available during tests -->
+        </dependency>
+        <!-- Spring Security -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <!-- Build settings -->
+    <build>
+        <plugins>
+
+            <!-- Spring Boot plugin: allows 'mvn spring-boot:run' and builds executable JAR -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>
