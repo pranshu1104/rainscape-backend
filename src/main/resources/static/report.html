@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Report Waterlogging</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url("map-bg.png") no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            width: 360px;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .back-btn {
+            margin-right: 10px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        label {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .input-box {
+            display: flex;
+            align-items: center;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+        .input-box input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            outline: none;
+        }
+        .severity-options {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+        }
+        .severity-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            width: 90px;
+            height: 90px;
+            transition: all 0.2s ease;
+        }
+        .severity-btn img {
+            /* UPDATED CSS HERE */
+            width: 50px;
+            height: 50px;
+            /* END OF UPDATED CSS */
+        }
+        .severity-btn.active {
+            border-color: #3b82f6;
+            background: #eaf3ff;
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            padding: 8px;
+            resize: none;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .btn-outline {
+            background: white;
+            border: 1px solid #ccc;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .photo-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .photo-preview img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="header">
+        <span class="back-btn" onclick="history.back()">←</span>
+        <h2>Report Waterlogging</h2>
+    </div>
+
+    <label>Location</label>
+    <div class="input-box">
+        <span style="margin-right:8px;">📍</span>
+        <input type="text" id="location" placeholder="Enter location"/>
+    </div>
+
+    <label>Severity Level</label>
+    <div class="severity-options">
+        <div class="severity-btn" onclick="selectSeverity(this, 'Low')">
+            <img src="low.png" alt="Low"/>
+            <div>Low</div>
+        </div>
+        <div class="severity-btn active" onclick="selectSeverity(this, 'Medium')">
+            <img src="medium.png" alt="Medium"/>
+            <div>Medium</div>
+        </div>
+        <div class="severity-btn" onclick="selectSeverity(this, 'High')">
+            <img src="high.png" alt="High"/>
+            <div>High</div>
+        </div>
+    </div>
+
+    <label>Notes</label>
+    <textarea id="notes" placeholder="Write additional details..."></textarea>
+
+    <button class="btn btn-outline" onclick="document.getElementById('photoInput').click()">
+        📷 Add Photos
+    </button>
+    <input type="file" id="photoInput" multiple accept="image/*" style="display:none" onchange="previewPhotos(event)"/>
+    <div id="photoPreview" class="photo-preview"></div>
+
+    <button class="btn btn-primary" onclick="submitReport()">Submit Report</button>
+</div>
+
+<script>
+    let selectedSeverity = "Medium";
+    let selectedPhotos = [];
+
+    function selectSeverity(el, level) {
+        document.querySelectorAll('.severity-btn').forEach(btn => btn.classList.remove('active'));
+        el.classList.add('active');
+        selectedSeverity = level;
+    }
+
+    function previewPhotos(event) {
+        const preview = document.getElementById("photoPreview");
+        preview.innerHTML = "";
+        selectedPhotos = Array.from(event.target.files);
+        selectedPhotos.forEach(file => {
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+            preview.appendChild(img);
+        });
+    }
+
+    function submitReport() {
+        const payload = {
+            location: document.getElementById("location").value,
+            severity: selectedSeverity,
+            notes: document.getElementById("notes").value,
+            photos: selectedPhotos.map(f => f.name)
+        };
+        console.log("Report submitted:", payload);
+        alert("✅ Report submitted! (Check console for details)");
+    }
+</script>
+</body>
+</html>

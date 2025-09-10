@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RainScape | Smart Waterlogging Monitor</title>
+    <script src="https://kit.fontawesome.com/a2e0ad9.js" crossorigin="anonymous"></script>
+    <style>
+        /* Global Tech Background */
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            color: white;
+            background: radial-gradient(circle at top left, #0f2027, #203a43, #2c5364);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background blobs */
+        .blob {
+            position: absolute;
+            width: 400px; height: 400px;
+            background: rgba(79,172,254,0.2);
+            border-radius: 50%;
+            filter: blur(120px);
+            animation: float 10s infinite alternate;
+        }
+        .blob:nth-child(1) { top: -50px; left: -100px; }
+        .blob:nth-child(2) { bottom: -80px; right: -120px; background: rgba(0,242,254,0.15); }
+
+        @keyframes float {
+            from { transform: translateY(0px) scale(1); }
+            to { transform: translateY(40px) scale(1.1); }
+        }
+
+        /* Header */
+        header {
+            position: absolute;
+            top: 20px; left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        header h1 {
+            font-size: 2.2rem;
+            margin: 0;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        header p {
+            font-size: 1rem;
+            color: #ddd;
+            margin-top: 5px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            max-width: 600px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .hero h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        .hero p {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #ccc;
+        }
+
+        /* Map Placeholder */
+        .map-card {
+            margin-top: 20px;
+            height: 200px; width: 100%;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Floating Chat Button */
+        #chat-toggle {
+            position: fixed; bottom: 20px; right: 20px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white; border-radius: 50%; width: 60px; height: 60px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 26px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+            z-index: 1000;
+        }
+        #chat-toggle:hover { transform: scale(1.1); }
+
+        /* Chat Window */
+        #chatbot {
+            position: fixed; bottom: 90px; right: 20px;
+            width: 320px; height: 400px;
+            background: white; border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            display: none; flex-direction: column; overflow: hidden;
+            font-family: "Segoe UI", sans-serif;
+            animation: slideUp 0.3s ease-out;
+            z-index: 1000;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        #chat-header {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white; padding: 12px; text-align: center;
+            font-weight: bold; font-size: 16px;
+        }
+        #chat-messages {
+            flex: 1; padding: 12px; overflow-y: auto; font-size: 14px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        /* Message Bubbles */
+        .bot-msg, .user-msg {
+            padding: 10px 14px; border-radius: 16px; max-width: 80%; line-height: 1.4;
+        }
+        .bot-msg {
+            background: #f1f1f1; align-self: flex-start;
+            border-top-left-radius: 0;
+        }
+        .user-msg {
+            background: #4facfe; color: white; align-self: flex-end;
+            border-top-right-radius: 0;
+        }
+
+        #chat-input-area {
+            display: flex; border-top: 1px solid #ddd;
+        }
+        #chat-input {
+            flex: 1; padding: 10px; border: none; outline: none; font-size: 14px;
+        }
+        #send-btn {
+            background: #4facfe; border: none; color: white;
+            padding: 0 15px; cursor: pointer; font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Animated background blobs -->
+<div class="blob"></div>
+<div class="blob"></div>
+
+<!-- Header -->
+<header>
+    <h1>RainScape</h1>
+    <p>Smart Waterlogging Monitoring & Routing Platform</p>
+</header>
+
+<!-- Hero Section -->
+<div class="hero">
+    <h2>Navigate Safely During Monsoons</h2>
+    <p>RainScape provides real-time updates on waterlogged areas using crowdsourced reports, weather APIs, and smart algorithms. Stay safe and find the best routes instantly.</p>
+    <div class="map-card">Live Map Preview</div>
+</div>
+
+<!-- Floating Chat Button -->
+<div id="chat-toggle"><i class="fa-solid fa-comments"></i></div>
+
+<!-- Chat Window -->
+<div id="chatbot">
+    <div id="chat-header">RainBot</div>
+    <div id="chat-messages">
+        <div class="bot-msg">Hi! I'm RainBot. How can I help you today?</div>
+    </div>
+    <div id="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Ask RainBot...">
+        <button id="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<script>
+    const toggleBtn = document.getElementById("chat-toggle");
+    const chatbot = document.getElementById("chatbot");
+    const input = document.getElementById("chat-input");
+    const sendBtn = document.getElementById("send-btn");
+    const messages = document.getElementById("chat-messages");
+
+    toggleBtn.onclick = () => {
+        chatbot.style.display = chatbot.style.display === "flex" ? "none" : "flex";
+    };
+
+    function sendMessage() {
+        let msg = input.value.trim();
+        if (!msg) return;
+
+        // Add user message
+        messages.innerHTML += `<div class="user-msg">${msg}</div>`;
+
+        // Fake bot reply
+        let reply = "I'm still learning! But I got your message: " + msg;
+        setTimeout(() => {
+            messages.innerHTML += `<div class="bot-msg">${reply}</div>`;
+            messages.scrollTop = messages.scrollHeight;
+        }, 500);
+
+        input.value = "";
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    sendBtn.onclick = sendMessage;
+    input.addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
+</script>
+</body>
+</html>

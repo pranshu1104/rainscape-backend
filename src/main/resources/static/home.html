@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>RainScape | Smart Waterlogging Monitor</title>
+    <script src="https://kit.fontawesome.com/a2e0ad9.js" crossorigin="anonymous"></script>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top left, #0f2027, #203a43, #2c5364);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        header { text-align: center; padding: 30px 20px; }
+        header h1 {
+            font-size: 2.4rem;
+            margin: 0;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        header p { font-size: 1rem; color: #ddd; margin-top: 6px; }
+
+        .hero {
+            text-align: center;
+            max-width: 700px;
+            margin: auto;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .hero h2 { font-size: 1.7rem; margin-bottom: 10px; }
+        .hero p { font-size: 1rem; color: #ccc; line-height: 1.5; }
+        .actions { margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            padding: 12px 20px; border: none; border-radius: 30px;
+            font-size: 1rem; cursor: pointer; font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe, #00f2fe); color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .btn-primary:hover { transform: scale(1.05); }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #4facfe;
+        }
+        .btn-secondary:hover { transform: scale(1.05); }
+        /* ... other styles */
+        /* ... other styles */
+        .map-container {
+            margin: 50px auto;
+            max-width: 900px;
+            height: 500px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            position: relative; /* Add this to contain the absolutely positioned legend */
+        }
+
+        #map { height: 100%; width: 100%; }
+
+        .legend {
+            /* Existing styles, plus these additions for correct positioning */
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+
+            background: rgba(30,30,30,0.9);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 18px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .legend div { margin-bottom: 6px; display: flex; align-items: center; }
+        .legend span { display: inline-block; width: 20px; height: 3px; margin-right: 8px; border-radius:2px; }
+        .green { background: green; opacity: 0.7; }
+        .yellow { background: yellow; opacity: 0.7; }
+        .red { background: red; opacity: 0.7; }
+
+        /* Add this new CSS to fix the contrast */
+        .leaflet-routing-container {
+            color: #333; /* Sets a dark color for text */
+            background: rgba(255,255,255,0.95); /* Explicitly sets a light background */
+        }
+        .leaflet-routing-container h3 {
+            color: #000; /* Ensures headers are dark as well */
+        }
+        /* ... other styles */
+        /* ... other styles */
+        /* Report Modal */
+        .modal {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 2000;
+        }
+        .card {
+            background: rgba(20,20,20,0.85);
+            backdrop-filter: blur(12px);
+            color: #f9f9f9;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            width: 380px;
+            padding: 22px;
+        }
+        .card h2 {
+            margin: 0 0 15px;
+            font-size: 22px;
+            font-weight: bold;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+        label { font-size: 14px; font-weight: bold; color: #ddd; }
+
+        .input-box {
+            display: flex; align-items: center;
+            background: rgba(50,50,50,0.9); border: 1px solid #666; border-radius: 10px;
+            padding: 8px 12px; margin-bottom: 15px;
+        }
+        .input-box input { border: none; background: transparent; width: 100%; outline: none; color: #fff; }
+
+        textarea {
+            width: 100%; min-height: 80px;
+            border-radius: 10px; border: 1px solid #666;
+            padding: 8px; resize: none; background: rgba(50,50,50,0.9); color: #fff;
+        }
+
+        .severity-options { display: flex; justify-content: space-between; margin: 15px 0; }
+        .severity-btn {
+            border: 2px solid #777;
+            background: rgba(255,255,255,0.05);
+            color: #eee;
+        }
+        .severity-btn img { width: 50px; height: 50px; }
+        .severity-btn.active {
+            border-color: #3b82f6;
+            background: rgba(59,130,246,0.2);
+            color: white;
+            box-shadow: 0 0 12px rgba(59,130,246,0.6);
+        }
+        .btn-outline { background: white; border: 1px solid #ccc; }
+        .photo-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+        .photo-preview img { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; }
+        .close-btn { position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 18px; color: #bbb; }
+
+        /* Chatbot Floating Button */
+        #chat-toggle {
+            position: fixed; bottom: 20px; right: 20px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white; border-radius: 30px;
+            padding: 12px 20px; display: flex; align-items: center; gap: 8px;
+            font-size: 16px; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s; z-index: 1000;
+        }
+        #chat-toggle:hover { transform: scale(1.05); }
+
+        #chatbot {
+            position: fixed; bottom: 80px; right: 20px;
+            width: 320px; height: 400px;
+            background: #1e293b;
+            border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            display: none; flex-direction: column;
+            font-family: "Segoe UI", sans-serif; z-index: 1500;
+            color: white;
+        }
+        #chat-header { background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; padding: 12px; text-align: center; font-weight: bold; font-size: 16px; }
+        #chat-messages { flex: 1; padding: 12px; overflow-y: auto; font-size: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .bot-msg { background: #334155; color: #e2e8f0; align-self: flex-start; border-radius: 16px; padding: 10px 14px; max-width: 80%; }
+        .user-msg { background: #4facfe; color: white; align-self: flex-end; border-radius: 16px; padding: 10px 14px; max-width: 80%; }
+        #chat-input-area { display: flex; border-top: 1px solid #475569; }
+        #chat-input { flex: 1; padding: 10px; border: none; outline: none; font-size: 14px; background: #0f172a; color: white; }
+        #send-btn { background: #4facfe; border: none; color: white; padding: 0 15px; cursor: pointer; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>RainScape</h1>
+    <p>Smart Waterlogging Monitoring & Routing Platform</p>
+</header>
+
+<div class="hero">
+    <h2>Navigate Safely During Monsoons</h2>
+    <p>Real-time routes with waterlogging detection, crowdsourced reports, and AI-driven insights.</p>
+    <div class="actions">
+        <button class="btn btn-primary" id="report-btn"><i class="fa-solid fa-water"></i> Report Waterlogging</button>
+        <button class="btn btn-secondary" onclick="scrollToMap()"><i class="fa-solid fa-map"></i> View Routes</button>
+    </div>
+</div>
+
+<div class="map-container" id="map-section">
+    <div id="map"></div>
+    <div class="legend">
+        <div><span class="green"></span> Clear Route</div>
+        <div><span class="yellow"></span> Moderately Affected</div>
+        <div><span class="red"></span> Waterlogged Route</div>
+    </div>
+</div>
+
+<div class="modal" id="report-modal">
+    <div class="card">
+        <span class="close-btn" id="close-modal">&times;</span>
+        <h2>Report Waterlogging</h2>
+        <label>Location</label>
+        <div class="input-box"><span style="margin-right:8px;">📍</span>
+            <input type="text" id="location" placeholder="Enter location"/>
+        </div>
+        <label>Severity Level</label>
+        <div class="severity-options">
+            <div class="severity-btn" onclick="selectSeverity(this, 'Low')"><img src="low.png"/><div>Low</div></div>
+            <div class="severity-btn active" onclick="selectSeverity(this, 'Medium')"><img src="medium.png"/><div>Medium</div></div>
+            <div class="severity-btn" onclick="selectSeverity(this, 'High')"><img src="high.png"/><div>High</div></div>
+        </div>
+        <label>Notes</label>
+        <textarea id="notes" placeholder="Write additional details..."></textarea>
+        <button class="btn btn-outline" onclick="document.getElementById('photoInput').click()">📷 Add Photos</button>
+        <input type="file" id="photoInput" multiple accept="image/*" style="display:none" onchange="previewPhotos(event)"/>
+        <div id="photoPreview" class="photo-preview"></div>
+        <button class="btn btn-primary" onclick="submitReport()">Submit Report</button>
+    </div>
+</div>
+
+<div id="chat-toggle"><i class="fa-solid fa-robot"></i> RainBot</div>
+<div id="chatbot">
+    <div id="chat-header">RainBot</div>
+    <div id="chat-messages"><div class="bot-msg">Hi! I'm RainBot. How can I help you today?</div></div>
+    <div id="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Ask RainBot...">
+        <button id="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<script>
+    function scrollToMap() { document.getElementById("map-section").scrollIntoView({ behavior: "smooth" }); }
+
+    // Init Map
+    var map = L.map('map').setView([28.4595, 77.0266], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var origin = L.latLng(28.4595, 77.0266);
+    var destination = L.latLng(28.4744, 77.0410);
+
+    function createRoute(waypoints, color, dash) {
+        L.Routing.control({
+            waypoints: waypoints,
+            lineOptions: { styles: [{color: color, weight: 5, opacity: 0.9, dashArray: dash}] },
+            addWaypoints: false, draggableWaypoints: false, fitSelectedRoutes: true,
+            createMarker: () => null,
+            show: true
+        }).addTo(map);
+    }
+    createRoute([origin, destination], 'green', null);
+    createRoute([origin, L.latLng(28.4650, 77.0320), destination], 'yellow', '4,6');
+    createRoute([origin, L.latLng(28.4690, 77.0360), destination], 'red', '6,6');
+
+    // Modal
+    const reportBtn = document.getElementById("report-btn");
+    const modal = document.getElementById("report-modal");
+    const closeModal = document.getElementById("close-modal");
+    reportBtn.onclick = () => modal.style.display = "flex";
+    closeModal.onclick = () => modal.style.display = "none";
+    window.onclick = e => { if (e.target == modal) modal.style.display = "none"; };
+
+    // Severity
+    let selectedSeverity = "Medium";
+    function selectSeverity(el, level) {
+        document.querySelectorAll('.severity-btn').forEach(btn => btn.classList.remove('active'));
+        el.classList.add('active'); selectedSeverity = level;
+    }
+
+    // Photo Preview
+    let selectedPhotos = [];
+    function previewPhotos(event) {
+        const preview = document.getElementById("photoPreview");
+        preview.innerHTML = "";
+        selectedPhotos = Array.from(event.target.files);
+        selectedPhotos.forEach(file => {
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+            preview.appendChild(img);
+        });
+    }
+
+    // Report Submission
+    function submitReport() {
+        const payload = {
+            location: document.getElementById("location").value,
+            severity: selectedSeverity,
+            notes: document.getElementById("notes").value,
+            photos: selectedPhotos.map(f => f.name)
+        };
+        console.log("Report submitted:", payload);
+        alert("✅ Report submitted! (Check console for details)");
+        modal.style.display = "none";
+    }
+
+    // Chatbot
+    const toggleBtn = document.getElementById("chat-toggle");
+    const chatbot = document.getElementById("chatbot");
+    const input = document.getElementById("chat-input");
+    const sendBtn = document.getElementById("send-btn");
+    const messages = document.getElementById("chat-messages");
+    toggleBtn.onclick = () => { chatbot.style.display = chatbot.style.display === "flex" ? "none" : "flex"; }
+    function sendMessage() {
+        let msg = input.value.trim();
+        if(!msg) return;
+        messages.innerHTML += `<div class="user-msg">${msg}</div>`;
+        let reply = "I got your message: " + msg;
+        setTimeout(() => {
+            messages.innerHTML += `<div class="bot-msg">${reply}</div>`;
+            messages.scrollTop = messages.scrollHeight;
+        }, 500);
+        input.value = "";
+        messages.scrollTop = messages.scrollHeight;
+    }
+    sendBtn.onclick = sendMessage;
+    input.addEventListener("keypress", e => { if(e.key === "Enter") sendMessage(); });
+</script>
+</body>
+</html>
